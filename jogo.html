@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoGame - Jogo de Plantio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2A7F62;
+      --primary-dark: #1E5A48;
+      --primary-light: #3AAE84;
+      --secondary: #FFD166;
+      --secondary-dark: #FFB347;
+      --accent: #9C27B0;
+      --accent-light: #BA68C8;
+      --dark: #1A3A32;
+      --darker: #0F261F;
+      --light: #F7F9F8;
+      --text: #333333;
+      --text-light: #5E6E66;
+      --danger: #EF476F;
+      --success: #06D6A0;
+      --warning: #FFC107;
+      
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+      
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      --transition-fast: all 0.15s ease-out;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+      min-height: 100vh;
+    }
+    
+    /* Fundo animado */
+    .animated-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    }
+    
+    .cloud {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      filter: blur(5px);
+      animation: float-cloud linear infinite;
+    }
+    
+    .leaf {
+      position: absolute;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%232A7F62"><path d="M17 8C8 10 5.9 16.8 3 19c2.5-1 7-3.5 7-5.5V8c2-1.5 4-2 7-2z"/></svg>');
+      background-size: contain;
+      background-repeat: no-repeat;
+      opacity: 0.6;
+      animation: float-leaf linear infinite;
+      transform-origin: center;
+    }
+    
+    .sun {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, #FFD166 30%, rgba(255,209,102,0) 70%);
+      border-radius: 50%;
+      filter: blur(2px);
+      animation: pulse-sun 8s ease-in-out infinite alternate;
+    }
+    
+    @keyframes float-cloud {
+      from { transform: translateX(-20%) translateY(0); }
+      to { transform: translateX(120%) translateY(-20px); }
+    }
+    
+    @keyframes float-leaf {
+      0% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+      100% { transform: translateY(0) rotate(360deg); }
+    }
+    
+    @keyframes pulse-sun {
+      0% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.8; }
+    }
+    
+    header {
+      background-color: var(--dark);
+      color: white;
+      padding: 1rem 0;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      z-index: 100;
+    }
+    
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: var(--transition-fast);
+    }
+    
+    .logo i {
+      color: var(--secondary);
+    }
+    
+    .logo:hover {
+      transform: translateY(-2px);
+    }
+    
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      transition: var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .nav-link:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    #jogo {
+      padding: 2rem 0;
+      text-align: center;
+      position: relative;
+    }
+    
+    .game-title {
+      color: var(--primary);
+      margin-bottom: 1rem;
+      font-size: 2.8rem;
+      font-weight: 700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+      display: inline-block;
+    }
+    
+    .game-title::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 2px;
+    }
+    
+    .game-description {
+      max-width: 800px;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+      color: var(--text-light);
+      font-size: 1.1rem;
+    }
+    
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      position: relative;
+    }
+    
+    .game-info {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 800px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 1.2rem;
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .game-info::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    }
+    
+    .score-box, .energy-box, .multiplier-box, .level-box {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-weight: bold;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: var(--transition-fast);
+    }
+    
+    .score-box {
+      color: var(--primary);
+      background-color: rgba(42, 127, 98, 0.1);
+    }
+    
+    .energy-box {
+      color: var(--secondary-dark);
+      background-color: rgba(255, 209, 102, 0.1);
+    }
+    
+    .multiplier-box {
+      color: var(--accent);
+      background-color: rgba(156, 39, 176, 0.1);
+    }
+    
+    .level-box {
+      color: var(--warning);
+      background-color: rgba(255, 193, 7, 0.1);
+    }
+    
+    .game-board {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      height: 500px;
+      background-color: #a5d6a7;
+      border: 3px solid var(--primary);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-xl);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.2) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(255,255,255,0.2) 0%, transparent 20%);
+    }
+    
+    .game-board::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%),
+        linear-gradient(-135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .plant-area {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      background-color: rgba(139, 195, 74, 0.3);
+      border: 2px dashed var(--primary);
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: var(--transition);
+      backdrop-filter: blur(2px);
+    }
+    
+    .plant-area:hover {
+      background-color: rgba(139, 195, 74, 0.5);
+      transform: scale(1.02);
+      box-shadow: 0 0 15px rgba(42, 127, 98, 0.3);
+    }
+    
+    .plant-area.active {
+      border-color: var(--secondary);
+      background-color: rgba(139, 195, 74, 0.6);
+      box-shadow: 0 0 20px rgba(255, 209, 102, 0.4);
+      animation: pulse-border 1.5s infinite;
+    }
+    
+    .tree {
+      font-size: 3.5rem;
+      color: var(--primary-dark);
+      position: absolute;
+      bottom: 10px;
+      animation: grow 0.8s cubic-bezier(0.68, -0.6, 0.32, 1.6) forwards;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+      transform-origin: bottom center;
+    }
+    
+    .tree.mature {
+      animation: sway 5s ease-in-out infinite;
+    }
+    
+    .trash {
+      font-size: 2.2rem;
+      color: #5d4037;
+      position: absolute;
+      cursor: pointer;
+      animation: appear 0.5s ease-out, float 3s ease-in-out infinite;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      z-index: 2;
+    }
+    
+    .trash.danger {
+      animation: appear 0.5s ease-out, shake 0.5s ease-in-out infinite;
+      color: var(--danger);
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    
+    .btn {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-plant {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-plant:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-plant:active {
+      transform: translateY(1px);
+    }
+    
+    .btn-clean {
+      background-color: var(--secondary);
+      color: var(--dark);
+    }
+    
+    .btn-clean:hover {
+      background-color: var(--secondary-dark);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-clean:active {
+      transform: translateY(1px);
+    }
+    
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+      background-color: #cccccc;
+      color: #666666;
+    }
+    
+    .game-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 2rem 3rem;
+      border-radius: 15px;
+      box-shadow: var(--shadow-xl);
+      z-index: 100;
+      text-align: center;
+      display: none;
+      opacity: 0;
+      width: 90%;
+      max-width: 500px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.3);
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    
+    .game-message h2 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+      font-size: 2rem;
+    }
+    
+    .game-message p {
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+      color: var(--text-light);
+    }
+    
+    .game-message .action-buttons {
+      justify-content: center;
+    }
+    
+    .feedback {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      color: var(--primary);
+      animation: floatUp 1.2s ease-out forwards;
+      z-index: 5;
+      box-shadow: var(--shadow-sm);
+      font-size: 1.1rem;
+      white-space: nowrap;
+    }
+    
+    .power-up {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2.5rem;
+      color: gold;
+      cursor: pointer;
+      animation: spin 3s linear infinite, pulse 1.5s ease-in-out infinite alternate;
+      z-index: 4;
+      filter: drop-shadow(0 0 8px rgba(255,215,0,0.6));
+      transition: var(--transition-fast);
+    }
+    
+    .power-up:hover {
+      transform: translate(-50%, -50%) scale(1.2);
+      filter: drop-shadow(0 0 12px rgba(255,215,0,0.8));
+    }
+    
+    #leaderboard {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      background-color: white;
+      padding: 2.5rem;
+      border-radius: 15px;
+      box-shadow: var(--shadow-xl);
+      z-index: 200;
+      max-width: 90%;
+      width: 500px;
+      display: none;
+      opacity: 0;
+      animation: fadeIn 0.3s ease-out forwards;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    #leaderboard h3 {
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      font-size: 1.8rem;
+      text-align: center;
+      position: relative;
+      padding-bottom: 0.5rem;
+    }
+    
+    #leaderboard h3::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 3px;
+    }
+    
+    #leaderboard ol {
+      padding-left: 20px;
+      margin-bottom: 2rem;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    
+    #leaderboard ol::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    #leaderboard ol::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+    
+    #leaderboard ol::-webkit-scrollbar-thumb {
+      background: var(--primary-light);
+      border-radius: 3px;
+    }
+    
+    #leaderboard li {
+      margin-bottom: 0.8rem;
+      padding: 0.8rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: var(--transition-fast);
+      border-radius: 5px;
+    }
+    
+    #leaderboard li:hover {
+      background-color: rgba(58, 174, 132, 0.05);
+    }
+    
+    #leaderboard li:nth-child(1) {
+      font-weight: bold;
+      color: var(--primary-dark);
+      position: relative;
+    }
+    
+    #leaderboard li:nth-child(1)::before {
+      content: '🥇';
+      margin-right: 0.5rem;
+    }
+    
+    #leaderboard li:nth-child(2)::before {
+      content: '🥈';
+      margin-right: 0.5rem;
+    }
+    
+    #leaderboard li:nth-child(3)::before {
+      content: '🥉';
+      margin-right: 0.5rem;
+    }
+    
+    #leaderboard .player-score {
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    #leaderboard .player-date {
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+    
+    .energy-bar-container {
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background-color: rgba(0,0,0,0.1);
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+    }
+    
+    .energy-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--secondary), var(--secondary-dark));
+      transition: width 0.3s ease-out;
+    }
+    
+    .particle {
+      position: absolute;
+      background-color: gold;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10;
+    }
+    
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background-color: var(--secondary);
+      opacity: 0;
+      z-index: 999;
+      animation: confetti-fall 5s linear forwards;
+    }
+    
+    /* Tela de tutorial */
+    #tutorial {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 300;
+      backdrop-filter: blur(5px);
+    }
+    
+    .tutorial-content {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 15px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: var(--shadow-xl);
+      position: relative;
+    }
+    
+    .tutorial-content h2 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+    .tutorial-content p {
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+    
+    .tutorial-step {
+      display: none;
+    }
+    
+    .tutorial-step.active {
+      display: block;
+    }
+    
+    .tutorial-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1.5rem 0;
+    }
+    
+    .tutorial-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #ddd;
+      cursor: pointer;
+    }
+    
+    .tutorial-indicator.active {
+      background-color: var(--primary);
+    }
+    
+    .tutorial-buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    /* Animações */
+    @keyframes grow {
+      0% { transform: scale(0) translateY(50px); opacity: 0; }
+      80% { transform: scale(1.1) translateY(-10px); }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    
+    @keyframes sway {
+      0%, 100% { transform: rotate(-3deg); }
+      50% { transform: rotate(3deg); }
+    }
+    
+    @keyframes appear {
+      0% { transform: scale(0) translateY(20px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translate(-50%, -50%); }
+      100% { opacity: 0; transform: translate(-50%, -180%); }
+    }
+    
+    @keyframes spin {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    
+    @keyframes pulse {
+      from { transform: translate(-50%, -50%) scale(1); }
+      to { transform: translate(-50%, -50%) scale(1.1); }
+    }
+    
+    @keyframes pulse-border {
+      0% { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 209, 102, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0); }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    
+    @keyframes confetti-fall {
+      0% { 
+        transform: translateY(-100vh) rotate(0deg); 
+        opacity: 1;
+      }
+      100% { 
+        transform: translateY(100vh) rotate(360deg); 
+        opacity: 0;
+      }
+    }
+    
+    @keyframes energy-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 209, 102, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0); }
+    }
+    
+    .energy-pulse {
+      animation: energy-pulse 1.5s infinite;
+    }
+    
+    /* Efeitos de partículas */
+    .particle-burst {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 20;
+    }
+    
+    /* Responsividade */
+    @media (max-width: 768px) {
+      .game-board {
+        height: 400px;
+      }
+      
+      .plant-area {
+        width: 120px;
+        height: 120px;
+      }
+      
+      .game-info {
+        flex-direction: column;
+        gap: 0.8rem;
+        align-items: center;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .game-title {
+        font-size: 2rem;
+      }
+      
+      .game-description {
+        font-size: 1rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .plant-area {
+        width: 90px;
+        height: 90px;
+      }
+      
+      .game-title {
+        font-size: 1.8rem;
+      }
+      
+      .game-message {
+        padding: 1.5rem;
+      }
+      
+      #leaderboard {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Fundo animado -->
+  <div class="animated-background" id="animatedBackground"></div>
+
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo"><i class="fas fa-leaf"></i>EcoGame</a>
+        <nav>
+          <a href="index.html" class="nav-link"><i class="fas fa-arrow-left"></i> Voltar</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="jogo">
+      <div class="container">
+        <h1 class="game-title">Jogo de Reflorestamento</h1>
+        <p class="game-description">
+          Plante árvores nas áreas marcadas para ganhar pontos! Cuidado com o lixo que aparece - 
+          você precisa removê-lo antes de plantar, mas isso custa energia. Cada árvore plantada 
+          recupera um pouco da sua energia! Conquiste multiplicadores e power-ups para aumentar sua pontuação!
+        </p>
+        
+        <div class="game-container">
+          <div class="game-info">
+            <div class="score-box">
+              <i class="fas fa-leaf"></i>
+              <span>Pontos: <span id="score">0</span></span>
+            </div>
+            <div class="energy-box">
+              <i class="fas fa-bolt"></i>
+              <span>Energia: <span id="energy">100</span>%</span>
+              <div class="energy-bar-container">
+                <div class="energy-bar" id="energyBar"></div>
+              </div>
+            </div>
+            <div class="multiplier-box">
+              <i class="fas fa-times"></i>
+              <span>Multiplicador: <span id="multiplier">1</span>x</span>
+            </div>
+            <div class="level-box">
+              <i class="fas fa-level-up-alt"></i>
+              <span>Nível: <span id="level">1</span></span>
+            </div>
+          </div>
+          
+          <div class="game-board" id="gameBoard">
+            <!-- Áreas de plantio serão adicionadas dinamicamente -->
+            <div class="game-message" id="gameMessage">
+              <h2 id="messageTitle">Parabéns!</h2>
+              <p id="messageText">Você plantou todas as árvores!</p>
+              <div class="action-buttons">
+                <button class="btn btn-plant" id="restartBtn"><i class="fas fa-redo"></i> Jogar Novamente</button>
+                <button class="btn btn-clean" id="leaderboardBtn"><i class="fas fa-trophy"></i> Ver Ranking</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <button class="btn btn-plant" id="plantBtn" disabled>
+              <i class="fas fa-seedling"></i> Plantar Árvore (10 energia)
+            </button>
+            <button class="btn btn-clean" id="cleanBtn" disabled>
+              <i class="fas fa-trash-alt"></i> Limpar Lixo (20 energia)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Tela de tutorial -->
+  <div id="tutorial">
+    <div class="tutorial-content">
+      <h2><i class="fas fa-graduation-cap"></i> Tutorial do EcoGame</h2>
+      
+      <div class="tutorial-step active">
+        <p>Bem-vindo ao EcoGame! Seu objetivo é reflorestar todas as áreas disponíveis.</p>
+        <p>Clique em uma área para selecioná-la e depois use os botões para plantar árvores ou limpar lixo.</p>
+        <div class="tutorial-image" style="text-align: center; margin: 1rem 0;">
+          <i class="fas fa-mouse-pointer" style="font-size: 2rem; color: var(--primary);"></i>
+        </div>
+      </div>
+      
+      <div class="tutorial-step">
+        <p>Cada árvore plantada dá pontos e recupera um pouco de energia.</p>
+        <p>Sequências de ações sem erros aumentam seu multiplicador de pontos!</p>
+        <div class="tutorial-image" style="text-align: center; margin: 1rem 0;">
+          <i class="fas fa-tree" style="font-size: 2rem; color: var(--primary);"></i>
+          <i class="fas fa-bolt" style="font-size: 2rem; color: var(--secondary); margin: 0 1rem;"></i>
+          <i class="fas fa-times" style="font-size: 2rem; color: var(--accent);"></i>
+        </div>
+      </div>
+      
+      <div class="tutorial-step">
+        <p>O lixo aparece aleatoriamente e deve ser removido antes de plantar.</p>
+        <p>Lixo perigoso (vermelho) aparece em níveis mais altos - remova-os rapidamente!</p>
+        <div class="tutorial-image" style="text-align: center; margin: 1rem 0;">
+          <i class="fas fa-trash" style="font-size: 2rem; color: #5d4037;"></i>
+          <i class="fas fa-biohazard" style="font-size: 2rem; color: var(--danger); margin: 0 1rem;"></i>
+        </div>
+      </div>
+      
+      <div class="tutorial-step">
+        <p>Power-ups dourados aparecem ocasionalmente - clique neles para ganhar bônus!</p>
+        <p>Eles podem dar energia extra, pontos ou aumentar seu multiplicador.</p>
+        <div class="tutorial-image" style="text-align: center; margin: 1rem 0;">
+          <i class="fas fa-star" style="font-size: 2rem; color: gold;"></i>
+        </div>
+      </div>
+      
+      <div class="tutorial-indicators">
+        <div class="tutorial-indicator active"></div>
+        <div class="tutorial-indicator"></div>
+        <div class="tutorial-indicator"></div>
+        <div class="tutorial-indicator"></div>
+      </div>
+      
+      <div class="tutorial-buttons">
+        <button class="btn btn-clean" id="prevTutorialBtn"><i class="fas fa-arrow-left"></i> Anterior</button>
+        <button class="btn btn-plant" id="nextTutorialBtn">Próximo <i class="fas fa-arrow-right"></i></button>
+        <button class="btn btn-plant" id="skipTutorialBtn" style="display: none;"><i class="fas fa-play"></i> Começar Jogo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="leaderboard"></div>
+
+  <footer>
+    <div class="container">
+      <p>© 2023 EcoGame - Todos os direitos reservados</p>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Elementos do jogo
+      const gameBoard = document.getElementById('gameBoard');
+      const scoreElement = document.getElementById('score');
+      const energyElement = document.getElementById('energy');
+      const energyBar = document.getElementById('energyBar');
+      const multiplierElement = document.getElementById('multiplier');
+      const levelElement = document.getElementById('level');
+      const plantBtn = document.getElementById('plantBtn');
+      const cleanBtn = document.getElementById('cleanBtn');
+      const gameMessage = document.getElementById('gameMessage');
+      const messageTitle = document.getElementById('messageTitle');
+      const messageText = document.getElementById('messageText');
+      const restartBtn = document.getElementById('restartBtn');
+      const leaderboardBtn = document.getElementById('leaderboardBtn');
+      const leaderboardDiv = document.getElementById('leaderboard');
+      const animatedBackground = document.getElementById('animatedBackground');
+      const tutorialDiv = document.getElementById('tutorial');
+      const tutorialSteps = document.querySelectorAll('.tutorial-step');
+      const tutorialIndicators = document.querySelectorAll('.tutorial-indicator');
+      const prevTutorialBtn = document.getElementById('prevTutorialBtn');
+      const nextTutorialBtn = document.getElementById('nextTutorialBtn');
+      const skipTutorialBtn = document.getElementById('skipTutorialBtn');
+      
+      // Variáveis de tutorial
+      let currentTutorialStep = 0;
+      
+      // Criar fundo animado
+      function createAnimatedBackground() {
+        // Adicionar sol
+        const sun = document.createElement('div');
+        sun.className = 'sun';
+        sun.style.top = '10%';
+        sun.style.right = '15%';
+        animatedBackground.appendChild(sun);
+        
+        // Adicionar nuvens
+        for (let i = 0; i < 5; i++) {
+          const cloud = document.createElement('div');
+          cloud.className = 'cloud';
+          
+          // Tamanho aleatório para as nuvens
+          const size = Math.random() * 100 + 50;
+          cloud.style.width = `${size}px`;
+          cloud.style.height = `${size * 0.6}px`;
+          
+          // Posição inicial aleatória
+          cloud.style.top = `${Math.random() * 30 + 5}%`;
+          cloud.style.left = `${Math.random() * 20 - 20}%`;
+          
+          // Velocidade de animação aleatória
+          const duration = Math.random() * 60 + 60;
+          cloud.style.animationDuration = `${duration}s`;
+          
+          animatedBackground.appendChild(cloud);
+        }
+        
+        // Adicionar folhas caindo
+        for (let i = 0; i < 8; i++) {
+          const leaf = document.createElement('div');
+          leaf.className = 'leaf';
+          
+          // Tamanho aleatório para as folhas
+          const size = Math.random() * 20 + 10;
+          leaf.style.width = `${size}px`;
+          leaf.style.height = `${size}px`;
+          
+          // Posição inicial aleatória
+          leaf.style.left = `${Math.random() * 100}%`;
+          leaf.style.top = `${Math.random() * 20 - 20}%`;
+          
+          // Velocidade de animação aleatória
+          const duration = Math.random() * 20 + 10;
+          leaf.style.animationDuration = `${duration}s`;
+          
+          // Atraso aleatório
+          leaf.style.animationDelay = `${Math.random() * 10}s`;
+          
+          animatedBackground.appendChild(leaf);
+        }
+      }
+      
+      // Variáveis do jogo
+      let score = 0;
+      let highScore = localStorage.getItem('highScore') || 0;
+      let multiplier = 1;
+      let streak = 0;
+      let energy = 100;
+      let selectedArea = null;
+      let trashItems = [];
+      let plantedTrees = 0;
+      let difficulty = 1;
+      let gameLevel = 1;
+      let gameStartTime = Date.now();
+      const totalAreas = 5;
+      let gameActive = false; // Começa falso até terminar o tutorial
+      
+      // Efeitos sonoros (usando a Web Audio API)
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      function playSound(frequency, type, duration) {
+        if (!audioContext) return;
+        
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.type = type;
+        oscillator.frequency.value = frequency;
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.1,
+          audioContext.currentTime + duration
+        );
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + duration);
+      }
+      
+      // Navegação do tutorial
+      function updateTutorialStep(step) {
+        currentTutorialStep = step;
+        
+        // Atualizar visibilidade dos passos
+        tutorialSteps.forEach((step, index) => {
+          step.classList.toggle('active', index === currentTutorialStep);
+        });
+        
+        // Atualizar indicadores
+        tutorialIndicators.forEach((indicator, index) => {
+          indicator.classList.toggle('active', index === currentTutorialStep);
+        });
+        
+        // Atualizar botões
+        prevTutorialBtn.style.display = currentTutorialStep === 0 ? 'none' : 'flex';
+        nextTutorialBtn.style.display = currentTutorialStep === tutorialSteps.length - 1 ? 'none' : 'flex';
+        skipTutorialBtn.style.display = currentTutorialStep === tutorialSteps.length - 1 ? 'flex' : 'none';
+      }
+      
+      nextTutorialBtn.addEventListener('click', function() {
+        if (currentTutorialStep < tutorialSteps.length - 1) {
+          updateTutorialStep(currentTutorialStep + 1);
+          playSound(523.25, 'sine', 0.1);
+        }
+      });
+      
+      prevTutorialBtn.addEventListener('click', function() {
+        if (currentTutorialStep > 0) {
+          updateTutorialStep(currentTutorialStep - 1);
+          playSound(392, 'sine', 0.1);
+        }
+      });
+      
+      skipTutorialBtn.addEventListener('click', function() {
+        tutorialDiv.style.display = 'none';
+        gameActive = true;
+        playSound(659.25, 'sine', 0.2);
+      });
+      
+      // Criar áreas de plantio
+      function createPlantAreas() {
+        const positions = [
+          { top: '20%', left: '15%' },
+          { top: '60%', left: '15%' },
+          { top: '20%', left: '50%', transform: 'translateX(-50%)' },
+          { top: '60%', left: '50%', transform: 'translateX(-50%)' },
+          { top: '40%', left: '85%', transform: 'translateX(-100%)' }
+        ];
+        
+        positions.forEach((pos, index) => {
+          const area = document.createElement('div');
+          area.className = 'plant-area';
+          area.id = `area-${index}`;
+          area.style.top = pos.top;
+          area.style.left = pos.left;
+          if (pos.transform) area.style.transform = pos.transform;
+          
+          area.addEventListener('click', function() {
+            selectArea(this);
+          });
+          
+          gameBoard.appendChild(area);
+        });
+      }
+      
+      // Selecionar área para ação
+      function selectArea(area) {
+        if (!gameActive) return;
+        
+        // Desselecionar área anterior
+        if (selectedArea) {
+          selectedArea.classList.remove('active');
+        }
+        
+        selectedArea = area;
+        selectedArea.classList.add('active');
+        
+        // Verificar se tem lixo na área
+        const hasTrash = trashItems.some(trash => trash.areaId === area.id);
+        const hasPowerUp = area.querySelector('.power-up');
+        
+        // Ativar botões conforme a situação
+        plantBtn.disabled = energy < 10 || hasTrash || area.querySelector('.tree');
+        cleanBtn.disabled = energy < 20 || !hasTrash;
+        
+        // Efeito sonoro de seleção
+        playSound(523.25, 'sine', 0.1);
+        
+        // Se tiver power-up, focar nele
+        if (hasPowerUp) {
+          const powerUp = area.querySelector('.power-up');
+          powerUp.style.transform = 'translate(-50%, -50%) scale(1.3)';
+          setTimeout(() => {
+            if (powerUp) powerUp.style.transform = 'translate(-50%, -50%) scale(1)';
+          }, 200);
+        }
+      }
+      
+      // Plantar árvore
+      plantBtn.addEventListener('click', function() {
+        if (!gameActive || !selectedArea || selectedArea.querySelector('.tree') || energy < 10) return;
+        
+        // Verificar se tem lixo (não deveria ter, mas só por garantia)
+        const trashInArea = trashItems.find(trash => trash.areaId === selectedArea.id);
+        if (trashInArea) return;
+        
+        // Gastar energia
+        energy -= 10;
+        updateEnergy();
+        
+        // Efeito sonoro de plantio
+        playSound(261.63, 'sine', 0.3);
+        
+        // Tipos de árvores com valores diferentes
+        const treeTypes = [
+          { icon: 'fa-tree', points: 50, matureTime: 3000, name: 'Árvore Comum' },
+          { icon: 'fa-apple-alt', points: 75, matureTime: 4000, name: 'Macieira' },
+          { icon: 'fa-pagelines', points: 60, matureTime: 3500, name: 'Palmeira' },
+          { icon: 'fa-spa', points: 80, matureTime: 4500, name: 'Floresta' },
+          { icon: 'fa-seedling', points: 90, matureTime: 5000, name: 'Árvore Rara' }
+        ];
+        
+        // Árvores melhores em níveis mais altos
+        const treeIndex = Math.min(
+          Math.floor(Math.random() * (gameLevel + 2)), 
+          treeTypes.length - 1
+        );
+        const selectedTree = treeTypes[treeIndex];
+        
+        // Criar árvore
+        const tree = document.createElement('div');
+        tree.className = 'tree';
+        tree.innerHTML = `<i class="fas ${selectedTree.icon}"></i>`;
+        selectedArea.appendChild(tree);
+        
+        // Criar efeito de partículas
+        createParticles(selectedArea, 15, 'var(--primary)');
+        
+        // Cálculo de pontos melhorado
+        const basePoints = selectedTree.points;
+        const timeBonus = Math.max(0, 100 - Math.floor((Date.now() - gameStartTime) / 1000)); // Bônus por velocidade
+        const totalPoints = Math.floor((basePoints + timeBonus) * multiplier);
+        
+        score += totalPoints;
+        streak++;
+        
+        // Mostrar feedback visual
+        showFeedback(`+${totalPoints} pontos! (${selectedTree.name})`, selectedArea);
+        
+        // Aumentar multiplicador após 3 ações consecutivas
+        if (streak >= 3) {
+          multiplier = Math.min(multiplier + 0.5, 5);
+          showFeedback("Multiplicador x" + multiplier, selectedArea);
+          updateMultiplier();
+          
+          // Efeito sonoro de multiplicador
+          playSound(1046.5, 'square', 0.2);
+        }
+        
+        updateScore();
+        
+        // Recuperar um pouco de energia
+        energy = Math.min(energy + 5, 100);
+        updateEnergy();
+        
+        plantedTrees++;
+        
+        // Transformar a árvore em "madura" após um tempo
+        setTimeout(() => {
+          tree.classList.add('mature');
+          
+          // Bônus adicional quando a árvore amadurece
+          if (tree.parentNode) { // Verifica se a árvore ainda está no jogo
+            const bonus = Math.floor(basePoints * 0.2 * multiplier);
+            score += bonus;
+            updateScore();
+            showFeedback(`+${bonus} bônus!`, selectedArea);
+          }
+        }, selectedTree.matureTime);
+        
+        checkGameWin();
+        
+        // Desabilitar botão de plantar nesta área
+        plantBtn.disabled = true;
+      });
+      
+      // Limpar lixo
+      cleanBtn.addEventListener('click', function() {
+        if (!gameActive || !selectedArea || energy < 20) return;
+        
+        // Encontrar o lixo nesta área
+        const trashIndex = trashItems.findIndex(trash => trash.areaId === selectedArea.id);
+        if (trashIndex === -1) return;
+        
+        // Gastar energia
+        energy -= 20;
+        updateEnergy();
+        
+        // Efeito sonoro de limpeza
+        playSound(329.63, 'triangle', 0.2);
+        
+        // Remover lixo visualmente e do array
+        const trashElement = trashItems[trashIndex].element;
+        trashElement.remove();
+        trashItems.splice(trashIndex, 1);
+        
+        // Criar efeito de partículas
+        createParticles(selectedArea, 10, 'var(--secondary)');
+        
+        // Ganhar alguns pontos por limpeza
+        const trashPoints = trashElement.classList.contains('danger') ? 40 : 20;
+        score += trashPoints;
+        streak = 0; // Resetar sequência
+        updateScore();
+        
+        // Mostrar feedback
+        showFeedback(trashElement.classList.contains('danger') ? 
+          "Lixo perigoso removido! +40pts" : "Lixo removido! +20pts", 
+          selectedArea
+        );
+        
+        // Atualizar botões
+        cleanBtn.disabled = true;
+        if (!selectedArea.querySelector('.tree')) {
+          plantBtn.disabled = energy < 10;
+        }
+      });
+      
+      // Criar efeito de partículas
+      function createParticles(element, count, color) {
+        const rect = element.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < count; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          particle.style.backgroundColor = color;
+          particle.style.width = `${Math.random() * 8 + 4}px`;
+          particle.style.height = particle.style.width;
+          particle.style.left = `${centerX}px`;
+          particle.style.top = `${centerY}px`;
+          
+          const angle = Math.random() * Math.PI * 2;
+          const velocity = Math.random() * 5 + 2;
+          const x = Math.cos(angle) * velocity;
+          const y = Math.sin(angle) * velocity;
+          
+          document.body.appendChild(particle);
+          
+          let posX = centerX;
+          let posY = centerY;
+          let opacity = 1;
+          let size = parseFloat(particle.style.width);
+          
+          const animate = () => {
+            posX += x;
+            posY += y;
+            opacity -= 0.02;
+            size *= 0.98;
+            
+            particle.style.left = `${posX}px`;
+            particle.style.top = `${posY}px`;
+            particle.style.opacity = opacity;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            if (opacity > 0) {
+              requestAnimationFrame(animate);
+            } else {
+              particle.remove();
+            }
+          };
+          
+          requestAnimationFrame(animate);
+        }
+      }
+      
+      // Gerar lixo aleatório
+      function generateTrash() {
+        if (!gameActive) return;
+        
+        // Aumentar dificuldade com o tempo
+        difficulty = 1 + Math.floor((Date.now() - gameStartTime) / 30000); // Aumenta a cada 30 segundos
+        
+        // Atualizar nível do jogo
+        const newLevel = Math.min(Math.floor(difficulty / 3) + 1, 5);
+        if (newLevel !== gameLevel) {
+          gameLevel = newLevel;
+          levelElement.textContent = gameLevel;
+          showFeedback(`Nível ${gameLevel} alcançado!`, gameBoard);
+          playSound(784, 'sine', 0.3);
+        }
+        
+        if (trashItems.length >= 2 + difficulty) return;
+        
+        const areas = document.querySelectorAll('.plant-area');
+        const emptyAreas = Array.from(areas).filter(area => 
+          !area.querySelector('.tree') && 
+          !trashItems.some(trash => trash.areaId === area.id) &&
+          !area.querySelector('.power-up')
+        );
+        
+        if (emptyAreas.length === 0) return;
+        
+        const randomArea = emptyAreas[Math.floor(Math.random() * emptyAreas.length)];
+        
+        const trash = document.createElement('div');
+        
+        // Tipos de lixo diferentes
+        const trashTypes = [
+          { icon: 'fa-trash', class: '' },
+          { icon: 'fa-recycle', class: '' },
+          { icon: 'fa-bottle-water', class: '' },
+          { icon: 'fa-biohazard', class: 'danger' },
+          { icon: 'fa-radiation', class: 'danger' }
+        ];
+        
+        // Lixo mais perigoso em níveis mais altos
+        const trashType = difficulty > 3 && Math.random() > 0.7 ? 
+          trashTypes[3 + Math.floor(Math.random() * 2)] : 
+          trashTypes[Math.floor(Math.random() * 3)];
+        
+        trash.className = `trash ${trashType.class}`;
+        trash.innerHTML = `<i class="fas ${trashType.icon}"></i>`;
+        
+        // Posicionar lixo aleatoriamente dentro da área
+        const areaRect = randomArea.getBoundingClientRect();
+        const maxLeft = areaRect.width - 30;
+        const maxTop = areaRect.height - 30;
+        
+        trash.style.left = `${10 + Math.random() * maxLeft}px`;
+        trash.style.top = `${10 + Math.random() * maxTop}px`;
+        
+        // Adicionar animação especial para lixo em dificuldade alta
+        if (difficulty > 3 && trashType.class === 'danger') {
+          trash.style.animation = 'pulse 0.8s infinite alternate';
+        }
+        
+        randomArea.appendChild(trash);
+        
+        trashItems.push({
+          element: trash,
+          areaId: randomArea.id,
+          type: trashType.class
+        });
+        
+        // Efeito sonoro de lixo aparecendo
+        playSound(220 + Math.random() * 100, 'sawtooth', 0.1);
+        
+        // Se esta área estiver selecionada, atualizar botões
+        if (selectedArea && selectedArea.id === randomArea.id) {
+          cleanBtn.disabled = energy < 20;
+          plantBtn.disabled = true;
+        }
+      }
+      
+      // Gerar power-ups
+      function generatePowerUp() {
+        if (!gameActive || Math.random() > 0.008 * difficulty) return; // Chance aumenta com a dificuldade
+        
+        const areas = document.querySelectorAll('.plant-area');
+        const emptyAreas = Array.from(areas).filter(area => 
+          !area.querySelector('.tree') && 
+          !area.querySelector('.power-up') &&
+          !trashItems.some(trash => trash.areaId === area.id)
+        );
+        
+        if (emptyAreas.length === 0) return;
+        
+        const randomArea = emptyAreas[Math.floor(Math.random() * emptyAreas.length)];
+        
+        const powerUp = document.createElement('div');
+        powerUp.className = 'power-up';
+        
+        // Tipos de power-up visuais
+        const powerUpIcons = ['fa-star', 'fa-bolt', 'fa-gem', 'fa-crown'];
+        powerUp.innerHTML = `<i class="fas ${powerUpIcons[Math.floor(Math.random() * powerUpIcons.length)]}"></i>`;
+        
+        randomArea.appendChild(powerUp);
+        
+        // Efeito sonoro de power-up aparecendo
+        playSound(880, 'sine', 0.3);
+        
+        powerUp.addEventListener('click', function() {
+          if (!gameActive) return;
+          
+          // Efeitos aleatórios
+          const effects = [
+            { energy: 30, text: '+30 Energia!', sound: 523.25, icon: 'fa-bolt' },
+            { multiplier: 0.5, text: 'Multiplicador +0.5!', sound: 659.25, icon: 'fa-times' },
+            { score: 100 * gameLevel, text: `+${100 * gameLevel} Pontos!`, sound: 783.99, icon: 'fa-leaf' },
+            { energy: 50, text: '+50 Energia!', sound: 523.25, icon: 'fa-battery-full', rare: true },
+            { multiplier: 1, text: 'Multiplicador +1!', sound: 1046.5, icon: 'fa-trophy', rare: true }
+          ];
+          
+          // Aumentar chance de efeitos raros com o nível
+          const rareChance = Math.min(0.3, gameLevel * 0.1);
+          let effect;
+          
+          if (Math.random() < rareChance) {
+            effect = effects[3 + Math.floor(Math.random() * 2)]; // Efeito raro
+          } else {
+            effect = effects[Math.floor(Math.random() * 3)]; // Efeito normal
+          }
+          
+          // Atualizar ícone para corresponder ao efeito
+          powerUp.innerHTML = `<i class="fas ${effect.icon}"></i>`;
+          
+          // Efeito sonoro
+          playSound(effect.sound, 'sine', 0.3);
+          
+          // Criar efeito de partículas douradas
+          createParticles(randomArea, 20, 'gold');
+          
+          if (effect.energy) {
+            energy = Math.min(energy + effect.energy, 100);
+            updateEnergy();
+            
+            // Efeito visual na barra de energia
+            energyBar.classList.add('energy-pulse');
+            setTimeout(() => {
+              energyBar.classList.remove('energy-pulse');
+            }, 1500);
+          }
+          
+          if (effect.multiplier) {
+            multiplier += effect.multiplier;
+            updateMultiplier();
+            showFeedback(`Multiplicador x${multiplier}`, randomArea);
+          }
+          
+          if (effect.score) {
+            score += effect.score;
+            updateScore();
+            showFeedback(effect.text, randomArea);
+          }
+          
+          showFeedback(effect.text, randomArea);
+          
+          // Animação de desaparecimento do power-up
+          powerUp.style.transition = 'all 0.5s ease-out';
+          powerUp.style.transform = 'translate(-50%, -50%) scale(1.5)';
+          powerUp.style.opacity = '0';
+          
+          setTimeout(() => {
+            powerUp.remove();
+          }, 500);
+        });
+      }
+      
+      // Mostrar feedback visual
+      function showFeedback(text, element) {
+        const feedback = document.createElement('div');
+        feedback.className = 'feedback';
+        feedback.textContent = text;
+        
+        // Estilo diferente para diferentes tipos de feedback
+        if (text.includes('Multiplicador')) {
+          feedback.style.color = 'var(--accent)';
+          feedback.style.fontSize = '1.3rem';
+        } else if (text.includes('Energia')) {
+          feedback.style.color = 'var(--secondary-dark)';
+        } else if (text.includes('Pontos') || text.includes('pts')) {
+          feedback.style.color = 'var(--primary-dark)';
+          feedback.style.fontWeight = 'bolder';
+        } else if (text.includes('Nível')) {
+          feedback.style.color = 'var(--warning)';
+          feedback.style.fontSize = '1.3rem';
+        } else if (text.includes('perigoso')) {
+          feedback.style.color = 'var(--danger)';
+          feedback.style.fontWeight = 'bold';
+        }
+        
+        element.appendChild(feedback);
+        
+        setTimeout(() => {
+          feedback.remove();
+        }, 1200);
+      }
+      
+      // Atualizar pontuação
+      function updateScore() {
+        scoreElement.textContent = score;
+        
+        // Efeito visual ao atualizar pontuação
+        scoreElement.style.transform = 'scale(1.2)';
+        setTimeout(() => {
+          scoreElement.style.transform = 'scale(1)';
+        }, 200);
+      }
+      
+      // Atualizar energia
+      function updateEnergy() {
+        energyElement.textContent = energy;
+        energyBar.style.width = `${energy}%`;
+        
+        // Mudar cor da barra conforme a energia diminui
+        if (energy < 20) {
+          energyBar.style.background = 'linear-gradient(90deg, var(--danger), #EF9A9A)';
+        } else if (energy < 50) {
+          energyBar.style.background = 'linear-gradient(90deg, var(--secondary), var(--secondary-dark))';
+        } else {
+          energyBar.style.background = 'linear-gradient(90deg, var(--secondary), var(--success))';
+        }
+        
+        // Efeito visual ao atualizar energia
+        energyElement.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+          energyElement.style.transform = 'scale(1)';
+        }, 200);
+        
+        // Atualizar estado dos botões
+        if (selectedArea) {
+          const hasTrash = trashItems.some(trash => trash.areaId === selectedArea.id);
+          const hasTree = selectedArea.querySelector('.tree');
+          
+          plantBtn.disabled = energy < 10 || hasTrash || hasTree;
+          cleanBtn.disabled = energy < 20 || !hasTrash;
+        }
+      }
+      
+      // Atualizar multiplicador
+      function updateMultiplier() {
+        multiplierElement.textContent = multiplier;
+        
+        // Efeito visual ao atualizar multiplicador
+        multiplierElement.style.transform = 'scale(1.3)';
+        multiplierElement.style.color = 'var(--accent-light)';
+        setTimeout(() => {
+          multiplierElement.style.transform = 'scale(1)';
+          multiplierElement.style.color = 'var(--accent)';
+        }, 300);
+      }
+      
+      // Verificar vitória
+      function checkGameWin() {
+        if (plantedTrees >= totalAreas) {
+          gameActive = false;
+          
+          // Criar efeito de confete
+          createConfetti();
+          
+          if (score > highScore) {
+            localStorage.setItem('highScore', score);
+            showMessage('Novo Recorde!', `Você reflorestou toda a área com ${score} pontos no nível ${gameLevel}!`);
+            
+            // Efeito sonoro de vitória
+            playSound(1046.5, 'sine', 0.5);
+            setTimeout(() => playSound(1318.5, 'sine', 0.5), 300);
+            setTimeout(() => playSound(1568, 'sine', 0.5), 600);
+          } else {
+            showMessage('Parabéns!', `Você reflorestou toda a área com ${score} pontos no nível ${gameLevel}! Seu recorde é ${highScore}.`);
+            
+            // Efeito sonoro de vitória
+            playSound(784, 'sine', 0.5);
+            setTimeout(() => playSound(1046.5, 'sine', 0.5), 300);
+          }
+          
+          updateLeaderboard();
+        }
+      }
+      
+      // Criar efeito de confete
+      function createConfetti() {
+        const colors = ['#2A7F62', '#FFD166', '#EF476F', '#06D6A0', '#118AB2', '#9C27B0'];
+        
+        for (let i = 0; i < 150; i++) {
+          const confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.left = `${Math.random() * 100}vw`;
+          confetti.style.width = `${Math.random() * 10 + 5}px`;
+          confetti.style.height = `${Math.random() * 10 + 5}px`;
+          confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+          confetti.style.animationDelay = `${Math.random() * 2}s`;
+          
+          document.body.appendChild(confetti);
+          
+          // Remover após a animação
+          setTimeout(() => {
+            confetti.remove();
+          }, 5000);
+        }
+      }
+      
+      // Mostrar mensagem
+      function showMessage(title, text) {
+        messageTitle.textContent = title;
+        messageText.textContent = text;
+        gameMessage.style.display = 'block';
+      }
+      
+      // Atualizar ranking
+      function updateLeaderboard() {
+        const leaderboard = JSON.parse(localStorage.getItem('ecoGameLeaderboard')) || [];
+        leaderboard.push({
+          name: 'Jogador ' + Math.floor(Math.random() * 1000),
+          score: score,
+          level: gameLevel,
+          date: new Date().toLocaleDateString('pt-BR')
+        });
+        
+        // Ordenar por pontuação (melhores primeiro)
+        leaderboard.sort((a, b) => b.score - a.score);
+        
+        // Manter apenas os top 10
+        if (leaderboard.length > 10) {
+          leaderboard.length = 10;
+        }
+        
+        localStorage.setItem('ecoGameLeaderboard', JSON.stringify(leaderboard));
+      }
+      
+      // Mostrar ranking
+      function showLeaderboard() {
+        const leaderboard = JSON.parse(localStorage.getItem('ecoGameLeaderboard')) || [];
+        let html = '<h3><i class="fas fa-trophy"></i> Top 10 Jogadores</h3><ol>';
+        
+        leaderboard.forEach((player, index) => {
+          html += `
+            <li>
+              <span class="player-name">${player.name}</span>
+              <span class="player-score">${player.score} pts (Nível ${player.level || 1})</span>
+              <span class="player-date">${player.date}</span>
+            </li>
+          `;
+        });
+        
+        if (leaderboard.length === 0) {
+          html += '<li>Nenhum recorde ainda. Seja o primeiro!</li>';
+        }
+        
+        html += '</ol><button class="btn btn-plant" id="closeLeaderboard"><i class="fas fa-times"></i> Fechar</button>';
+        
+        leaderboardDiv.innerHTML = html;
+        leaderboardDiv.style.display = 'block';
+        
+        document.getElementById('closeLeaderboard').addEventListener('click', function() {
+          leaderboardDiv.style.display = 'none';
+          
+          // Efeito sonoro
+          playSound(261.63, 'sine', 0.1);
+        });
+      }
+      
+      // Reiniciar jogo
+      restartBtn.addEventListener('click', function() {
+        // Resetar variáveis
+        score = 0;
+        energy = 100;
+        multiplier = 1;
+        streak = 0;
+        plantedTrees = 0;
+        trashItems = [];
+        selectedArea = null;
+        difficulty = 1;
+        gameLevel = 1;
+        gameStartTime = Date.now();
+        gameActive = true;
+        
+        // Atualizar display
+        updateScore();
+        updateEnergy();
+        updateMultiplier();
+        levelElement.textContent = gameLevel;
+        gameMessage.style.display = 'none';
+        leaderboardDiv.style.display = 'none';
+        
+        // Limpar tabuleiro
+        document.querySelectorAll('.plant-area').forEach(area => {
+          area.innerHTML = '';
+          area.classList.remove('active');
+        });
+        
+        // Recriar áreas (para garantir que os eventos estão corretos)
+        gameBoard.querySelectorAll('.plant-area').forEach(area => area.remove());
+        createPlantAreas();
+        
+        // Resetar botões
+        plantBtn.disabled = true;
+        cleanBtn.disabled = true;
+        
+        // Efeito sonoro
+        playSound(523.25, 'sine', 0.2);
+      });
+      
+      // Mostrar ranking
+      leaderboardBtn.addEventListener('click', function() {
+        showLeaderboard();
+        
+        // Efeito sonoro
+        playSound(659.25, 'sine', 0.2);
+      });
+      
+      // Iniciar jogo
+      createAnimatedBackground();
+      createPlantAreas();
+      updateMultiplier();
+      
+      // Mostrar tutorial na primeira visita
+      const firstVisit = localStorage.getItem('ecoGameFirstVisit');
+      if (!firstVisit) {
+        tutorialDiv.style.display = 'flex';
+        localStorage.setItem('ecoGameFirstVisit', 'false');
+      } else {
+        gameActive = true;
+      }
+      
+      // Gerar lixo periodicamente
+      setInterval(generateTrash, 5000);
+      
+      // Gerar power-ups periodicamente
+      setInterval(generatePowerUp, 10000);
+      
+      // Diminuir energia com o tempo (mais rápido em níveis mais altos)
+      setInterval(function() {
+        if (gameActive && energy > 0 && plantedTrees < totalAreas) {
+          const energyLoss = 1 + (gameLevel * 0.2);
+          energy = Math.max(energy - energyLoss, 0);
+          updateEnergy();
+          
+          if (energy === 0) {
+            showMessage('Game Over', `Sua energia acabou no nível ${gameLevel}! Recarregue plantando mais árvores.`);
+            gameActive = false;
+            
+            // Efeito sonoro de game over
+            playSound(220, 'sine', 0.5);
+          }
+        }
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
