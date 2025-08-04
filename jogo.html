@@ -1587,7 +1587,7 @@
       
       // Atualizar energia
       function updateEnergy() {
-        energyElement.textContent = energy;
+       energyElement.textContent = Math.round(energy);
         energyBar.style.width = `${energy}%`;
         
         // Mudar cor da barra conforme a energia diminui
@@ -1687,25 +1687,33 @@
       }
       
       // Atualizar ranking
-      function updateLeaderboard() {
-        const leaderboard = JSON.parse(localStorage.getItem('ecoGameLeaderboard')) || [];
-        leaderboard.push({
-          name: 'Jogador ' + Math.floor(Math.random() * 1000),
-          score: score,
-          level: gameLevel,
-          date: new Date().toLocaleDateString('pt-BR')
-        });
-        
-        // Ordenar por pontuação (melhores primeiro)
-        leaderboard.sort((a, b) => b.score - a.score);
-        
-        // Manter apenas os top 10
-        if (leaderboard.length > 10) {
-          leaderboard.length = 10;
-        }
-        
-        localStorage.setItem('ecoGameLeaderboard', JSON.stringify(leaderboard));
-      }
+     function updateLeaderboard() {
+  const leaderboard = JSON.parse(localStorage.getItem('ecoGameLeaderboard')) || [];
+
+  // Solicita nome do jogador
+  let playerName = prompt("Digite seu nome para salvar no ranking:", "Anônimo");
+  if (!playerName || playerName.trim() === "") {
+    playerName = "Anônimo";
+  }
+
+  leaderboard.push({
+    name: playerName.trim(),
+    score: score,
+    level: gameLevel,
+    date: new Date().toLocaleDateString('pt-BR')
+  });
+
+  // Ordenar por pontuação (maior primeiro)
+  leaderboard.sort((a, b) => b.score - a.score);
+
+  // Mantém apenas os 10 melhores
+  if (leaderboard.length > 10) {
+    leaderboard.length = 10;
+  }
+
+  localStorage.setItem('ecoGameLeaderboard', JSON.stringify(leaderboard));
+}
+
       
       // Mostrar ranking
       function showLeaderboard() {
