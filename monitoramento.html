@@ -2058,37 +2058,20 @@
         weight: 1
       });
     }
-
-    // Simular posições de satélites com movimento mais realista
+    // Gerar posições aleatórias de satélites apenas sobre o Brasil
     function simulateSatellitePositions() {
       return satellitesData.map(sat => {
-        // Gerar posição com base em órbita simulada
-        const now = new Date();
-        const timeFactor = now.getMinutes() + now.getSeconds() / 60;
-        
-        // Posição baseada em órbita SSO (Sun-Synchronous Orbit)
-        let lat, lng;
-        
-        if (sat.orbit.includes('SSO')) {
-          // Órbita quase polar com inclinação ~98°
-          lat = 82 * Math.sin(timeFactor * Math.PI / 30);
-          lng = -60 + (timeFactor * 12) % 360 - 180;
-        } else {
-          // Órbita polar simples
-          lat = 85 * Math.sin(timeFactor * Math.PI / 30);
-          lng = -60 + (timeFactor * 6) % 360 - 180;
-        }
-        
-        // Ajustar para ficar sobre o Brasil
-        lat = (lat * 0.3) - 10;
-        lng = (lng * 0.3) - 55;
-        
-        return {
-          ...sat,
-          lat: lat,
-          lng: lng,
-          timestamp: now
-        };
+      // Limites aproximados do Brasil
+      const minLat = -33, maxLat = 5;
+      const minLng = -74, maxLng = -34;
+      const lat = Math.random() * (maxLat - minLat) + minLat;
+      const lng = Math.random() * (maxLng - minLng) + minLng;
+      return {
+        ...sat,
+        lat: lat,
+        lng: lng,
+        timestamp: new Date()
+      };
       });
     }
 
